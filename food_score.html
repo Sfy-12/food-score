@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>食物选择评分器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ee;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #697386;
+      --line: #d9e0e7;
+      --accent: #0f766e;
+      --accent-2: #b45309;
+      --good: #16774f;
+      --warn: #b45309;
+      --bad: #b42318;
+      --shadow: 0 14px 34px rgba(31, 41, 51, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(960px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    header {
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 46px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lede {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .input-panel {
+      padding: 18px;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #b8c3cf;
+      border-radius: 6px;
+      color: var(--ink);
+      font: inherit;
+      font-size: 17px;
+      background: #fff;
+    }
+
+    input {
+      min-height: 48px;
+      padding: 0 14px;
+    }
+
+    select {
+      min-height: 42px;
+      padding: 0 10px;
+    }
+
+    textarea {
+      min-height: 86px;
+      padding: 12px 14px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 3px solid rgba(15, 118, 110, 0.18);
+      border-color: var(--accent);
+    }
+
+    button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 18px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: #115e59;
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      border: 1px solid #cbd5df;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .field {
+      margin-top: 16px;
+    }
+
+    .field-hint {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .meal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .meal-field label {
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented span {
+      display: grid;
+      min-height: 44px;
+      place-items: center;
+      border: 1px solid #b8c3cf;
+      border-radius: 6px;
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .segmented input:checked + span {
+      border-color: var(--accent);
+      background: #e6f5f2;
+      color: #115e59;
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .score-line {
+      display: grid;
+      grid-template-columns: 138px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .score-ring {
+      width: 138px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        conic-gradient(var(--score-color) calc(var(--score) * 1%), #e7edf3 0);
+      position: relative;
+    }
+
+    .score-ring::after {
+      content: "";
+      width: 104px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+    }
+
+    .score-value {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      font-weight: 800;
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .score-value small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .verdict {
+      font-size: 23px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .subtext {
+      color: var(--muted);
+    }
+
+    .mini-score {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #fbfcfd;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfd;
+    }
+
+    .metric-name {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .bar {
+      height: 9px;
+      border-radius: 999px;
+      background: #e6ebf0;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      width: calc(var(--value) * 1%);
+      background: var(--score-color);
+    }
+
+    .notes {
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .note {
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: #f3fbf8;
+      border-radius: 6px;
+    }
+
+    .note.warn {
+      border-left-color: var(--warn);
+      background: #fff7ed;
+    }
+
+    .note.bad {
+      border-left-color: var(--bad);
+      background: #fff5f5;
+    }
+
+    aside,
+    .wish-panel {
+      padding: 16px;
+    }
+
+    aside h2,
+    .wish-panel h2 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .wish-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .wish-row input {
+      min-height: 42px;
+      font-size: 14px;
+    }
+
+    .wish-row button {
+      min-height: 42px;
+      padding: 0 12px;
+    }
+
+    .wish-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .wish-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: #fbfcfd;
+    }
+
+    .wish-name {
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .wish-time {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .ghost-button {
+      min-height: 34px;
+      border: 1px solid #cbd5df;
+      background: #fff;
+      color: #334155;
+      padding: 0 10px;
+      font-size: 13px;
+    }
+
+    .ghost-button:hover {
+      background: #f8fafc;
+    }
+
+    .small-list {
+      padding-left: 18px;
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .small-list li {
+      margin: 6px 0;
+    }
+
+    .sources {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .sources a {
+      color: var(--accent);
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 28px 0 8px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 22px, 960px);
+        padding-top: 22px;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .row,
+      .score-line {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .score-ring {
+        margin: 0 auto;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .meal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>食物选择评分器</h1>
+      <p class="lede">输入一个食物名，程序会估算它对“吃完能停住、吃后更稳定”的友好程度。分数越高，越适合作为当下选择。</p>
+    </header>
+
+    <section class="app" aria-label="食物评分工具">
+      <div class="panel">
+        <div class="input-panel">
+          <label for="food">食物名称</label>
+          <div class="row">
+            <input id="food" autocomplete="off" placeholder="例如：奶茶、米饭鸡蛋、Döner、Schokolade">
+            <button id="scoreButton" type="button">评分</button>
+          </div>
+          <div class="examples" aria-label="示例">
+            <span class="chip">奶茶</span>
+            <span class="chip">酸奶水果</span>
+            <span class="chip">米饭鸡蛋青菜</span>
+            <span class="chip">薯片</span>
+            <span class="chip">Döner</span>
+            <span class="chip">Vollkornbrot mit Käse</span>
+            <span class="chip">Schokolade</span>
+            <span class="chip">Pommes</span>
+          </div>
+          <div class="field">
+            <label>现在更像是</label>
+            <div class="segmented" role="radiogroup" aria-label="进食原因">
+              <label>
+                <input type="radio" name="mood" value="hungry" checked>
+                <span>饿了</span>
+              </label>
+              <label>
+                <input type="radio" name="mood" value="bored">
+                <span>无聊/想吃</span>
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="beforeFood">吃这个之前已经吃了什么</label>
+            <textarea id="beforeFood" placeholder="例如：早上咖啡，午饭米饭鸡肉青菜；或者：今天还没怎么吃"></textarea>
+          </div>
+          <div class="field">
+            <label>今天的吃饭时间</label>
+            <div class="meal-grid">
+              <div class="meal-field">
+                <label for="breakfastTime">早饭</label>
+                <select id="breakfastTime">
+                  <option value="none">无</option>
+                  <option value="07:30">7:30</option>
+                  <option value="09:30">9:30</option>
+                </select>
+              </div>
+              <div class="meal-field">
+                <label for="lunchTime">午饭</label>
+                <select id="lunchTime">
+                  <option value="11:30">11:30</option>
+                  <option value="12:00" selected>12:00</option>
+                </select>
+              </div>
+              <div class="meal-field">
+                <label for="dinnerTime">晚饭</label>
+                <select id="dinnerTime">
+                  <option value="18:30">18:30</option>
+                  <option value="19:00" selected>19:00</option>
+                </select>
+              </div>
+            </div>
+            <p id="currentTime" class="field-hint">正在读取当前时间...</p>
+          </div>
+        </div>
+        <div id="result" class="result">
+          <p class="empty">先输入一个食物名，我会给你一个 0-100 分和具体理由。</p>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <aside class="panel">
+          <h2>评分看什么</h2>
+          <ul class="small-list">
+            <li>可停止性：有没有固定份量，吃完是否容易结束。</li>
+            <li>失控风险：高糖、高油、脆口零食、甜饮通常更容易触发继续吃。</li>
+            <li>饱腹稳定：蛋白质、主食、纤维组合越完整越稳。</li>
+            <li>营养密度：蔬菜、豆制品、奶类、鱼禽蛋、全谷物会加分。</li>
+            <li>吃后感：是否容易胀、困、内疚或想继续吃。</li>
+            <li>时间权重：靠近正餐时压低分数，午饭后超过三小时会放宽。</li>
+            <li>进食习惯：结合前面吃过的内容，估算现在是否真的适合继续吃。</li>
+          </ul>
+          <div class="sources">
+            参考框架：德国 <a href="https://www.blsdb.de/" target="_blank" rel="noreferrer">Bundeslebensmittelschlüssel/BLS</a> 的食物分类思路、中国居民膳食指南的平衡膳食思路，以及 NHS/NEDA 对 binge eating 风险特征的描述。本工具只做选择辅助，不替代医生、心理治疗师或营养师。
+          </div>
+        </aside>
+
+        <section class="panel wish-panel" aria-label="想吃食物记录">
+          <h2>想吃清单</h2>
+          <p class="subtext">把想吃的东西先放这里，给冲动一个出口。</p>
+          <div class="wish-row">
+            <input id="wishInput" autocomplete="off" placeholder="记录想吃的食物">
+            <button id="addWishButton" type="button">添加</button>
+          </div>
+          <div id="wishList" class="wish-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const foodInput = document.querySelector("#food");
+    const beforeFoodInput = document.querySelector("#beforeFood");
+    const breakfastTimeInput = document.querySelector("#breakfastTime");
+    const lunchTimeInput = document.querySelector("#lunchTime");
+    const dinnerTimeInput = document.querySelector("#dinnerTime");
+    const currentTime = document.querySelector("#currentTime");
+    const wishInput = document.querySelector("#wishInput");
+    const addWishButton = document.querySelector("#addWishButton");
+    const wishList = document.querySelector("#wishList");
+    const scoreButton = document.querySelector("#scoreButton");
+    const result = document.querySelector("#result");
+
+    const rules = [
+      {
+        name: "高触发甜食/甜饮",
+        keywords: [
+          "奶茶", "甜品", "蛋糕", "饼干", "巧克力", "糖", "糖果", "冰淇淋", "雪糕", "可乐", "汽水",
+          "schokolade", "keks", "kekse", "kuchen", "torte", "eis", "cola", "limonade", "bonbon"
+        ],
+        effects: { stop: -28, trigger: -34, satiety: -16, nutrition: -18, after: -22, sugar: -30 },
+        notes: ["高糖或甜味强的食物可能让“还想再来一点”的冲动变强。", "如果真的想吃，优先选单份、当场吃完、不带大包装回家。"]
+      },
+      {
+        name: "脆口零食/大包装风险",
+        keywords: ["薯片", "锅巴", "辣条", "瓜子", "坚果大包", "爆米花", "chips", "cracker", "salzstangen", "popcorn"],
+        effects: { stop: -34, trigger: -34, satiety: -14, nutrition: -12, after: -20, sugar: -6 },
+        notes: ["脆口、咸香、可连续抓取的食物，可停止性通常偏低。", "更安全的版本是倒进小碗，包装离开手边。"]
+      },
+      {
+        name: "油炸/快餐",
+        keywords: ["炸鸡", "薯条", "汉堡", "披萨", "烧烤", "烤串", "油条", "fried", "pommes", "burger", "pizza", "currywurst", "wurst"],
+        effects: { stop: -18, trigger: -20, satiety: 2, nutrition: -16, after: -14, sugar: -2 },
+        notes: ["高油高盐食物不一定不行，但容易越吃越重口。", "搭配蔬菜、汤或无糖饮料，会比单独吃更稳。"]
+      },
+      {
+        name: "烘焙点心/精制面包",
+        keywords: ["可颂", "牛角包", "羊角包", "丹麦面包", "酥皮", "甜面包", "面包卷", "croissant", "brioche", "plunder", "hörnchen", "hoernchen"],
+        effects: { stop: -10, trigger: -14, satiety: -4, nutrition: -10, after: -8, sugar: -8 },
+        notes: ["可颂这类酥皮面包通常高油、精制碳水多，饱腹稳定性一般。", "如果是真的饿，最好搭配蛋白质，比如酸奶、鸡蛋、奶酪或牛奶。"]
+      },
+      {
+        name: "一份正餐/混合餐",
+        keywords: ["便当", "盖饭", "套餐", "米饭", "面条", "饺子", "包子", "炒饭", "炒面", "麻辣烫", "döner", "doener", "reis", "nudeln", "kartoffel", "kartoffeln", "pasta"],
+        effects: { stop: 8, trigger: 2, satiety: 16, nutrition: 4, after: 6, sugar: 2 },
+        notes: ["固定一份的正餐通常比零食更容易自然结束。", "如果能加蛋白质和蔬菜，稳定性会明显更好。"]
+      },
+      {
+        name: "蛋白质来源",
+        keywords: ["鸡蛋", "鸡胸", "鸡肉", "鱼", "虾", "牛肉", "豆腐", "豆浆", "豆制品", "酸奶", "牛奶", "奶酪", "cheese", "käse", "kaese", "ei", "eier", "fisch", "hähnchen", "haehnchen", "tofu", "quark", "skyr", "joghurt", "milch"],
+        effects: { stop: 12, trigger: 10, satiety: 24, nutrition: 22, after: 14, sugar: 6 },
+        notes: ["蛋白质会提高饱腹稳定性，通常能帮你更容易停住。"]
+      },
+      {
+        name: "蔬菜/水果/全谷物",
+        keywords: ["蔬菜", "青菜", "沙拉", "水果", "苹果", "香蕉", "燕麦", "全麦", "杂粮", "红薯", "玉米", "gemüse", "gemuese", "salat", "obst", "apfel", "banane", "hafer", "vollkorn", "vollkornbrot"],
+        effects: { stop: 10, trigger: 12, satiety: 18, nutrition: 24, after: 16, sugar: 8 },
+        notes: ["纤维和体积感会增加饱腹稳定性，适合做“稳住”的底座。"]
+      },
+      {
+        name: "液体热量",
+        keywords: ["饮料", "果汁", "奶昔", "拿铁", "酒", "啤酒", "saft", "smoothie", "latte", "bier", "wein"],
+        effects: { stop: -8, trigger: -12, satiety: -18, nutrition: -6, after: -10, sugar: -18 },
+        notes: ["液体热量通常不太顶饱，如果当作一餐，后面可能更想吃。"]
+      }
+    ];
+
+    const defaultMetrics = {
+      stop: 62,
+      trigger: 62,
+      satiety: 52,
+      nutrition: 50,
+      after: 58,
+      sugar: 58
+    };
+
+    const labels = {
+      stop: "可停止性",
+      trigger: "失控风险控制",
+      satiety: "饱腹稳定",
+      nutrition: "营养密度",
+      after: "吃后感",
+      sugar: "糖油压力"
+    };
+
+    const wholeFoodPattern = /蔬菜|青菜|沙拉|水果|苹果|香蕉|燕麦|全麦|杂粮|红薯|玉米|鸡蛋|鸡胸|鸡肉|鱼|虾|牛肉|豆腐|豆浆|酸奶|牛奶|奶酪|gemuese|gemüse|salat|obst|apfel|banane|hafer|vollkorn|vollkornbrot|ei|eier|fisch|haehnchen|hähnchen|tofu|quark|skyr|joghurt|milch|kaese|käse/;
+    const lowNutritionPattern = /奶茶|甜品|蛋糕|饼干|巧克力|糖果|冰淇淋|雪糕|可乐|汽水|薯片|锅巴|辣条|爆米花|炸鸡|薯条|汉堡|披萨|可颂|牛角包|羊角包|丹麦面包|酥皮|甜面包|schokolade|keks|kekse|kuchen|torte|eis|cola|limonade|chips|popcorn|pommes|burger|pizza|croissant|brioche|plunder|hoernchen|hörnchen/;
+    const lowCalWholePattern = /蔬菜|青菜|沙拉|苹果|水果|酸奶|豆腐|豆浆|牛奶|黄瓜|番茄|西红柿|gemuese|gemüse|salat|apfel|obst|joghurt|skyr|quark|tofu|milch/;
+    const snackPattern = /薯片|锅巴|辣条|瓜子|爆米花|饼干|巧克力|糖果|蛋糕|甜品|冰淇淋|雪糕|可颂|牛角包|羊角包|丹麦面包|酥皮|chips|popcorn|keks|kekse|schokolade|bonbon|kuchen|torte|eis|croissant|brioche|plunder|hoernchen|hörnchen/;
+    const drinkPattern = /奶茶|饮料|果汁|奶昔|拿铁|可乐|汽水|酒|啤酒|saft|smoothie|latte|cola|limonade|bier|wein/;
+
+    function normalize(text) {
+      return text.trim().toLowerCase()
+        .replaceAll("ö", "oe")
+        .replaceAll("ä", "ae")
+        .replaceAll("ü", "ue")
+        .replaceAll("ß", "ss");
+    }
+
+    function clamp(value) {
+      return Math.max(0, Math.min(100, Math.round(value)));
+    }
+
+    function minutesFromTime(value) {
+      if (!value || value === "none") return null;
+      const [hours, minutes] = value.split(":").map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function currentMinutes() {
+      const now = new Date();
+      return now.getHours() * 60 + now.getMinutes();
+    }
+
+    function formatClock(date = new Date()) {
+      return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function updateCurrentTimeLabel() {
+      currentTime.textContent = `当前时间：${formatClock()}。评分会根据离早饭、午饭、晚饭的距离自动调整。`;
+    }
+
+    function mealTimingScore() {
+      const now = currentMinutes();
+      const breakfast = minutesFromTime(breakfastTimeInput.value);
+      const lunch = minutesFromTime(lunchTimeInput.value);
+      const dinner = minutesFromTime(dinnerTimeInput.value);
+      let adjustment = 0;
+      const notes = [];
+
+      if (breakfast !== null && Math.abs(now - breakfast) < 60) {
+        adjustment -= 24;
+        notes.push("现在离你选择的早饭时间小于 1 小时，系统会降低“现在就吃”的分数。");
+      }
+
+      if (lunch !== null && lunch - now >= 0 && lunch - now <= 30) {
+        adjustment -= 14;
+        notes.push("现在离午饭小于 30 分钟，如果要吃，建议只吃少量。");
+      }
+
+      if (lunch !== null && dinner !== null && now - lunch >= 180 && dinner - now > 30) {
+        adjustment += 14;
+        notes.push("现在离午饭已经超过 3 小时，且不贴近晚饭，可以适当放宽。");
+      }
+
+      if (dinner !== null && dinner - now >= 0 && dinner - now <= 30) {
+        adjustment -= 14;
+        notes.push("现在离晚饭小于 30 分钟，如果要吃，建议只吃少量。");
+      }
+
+      if (!notes.length) {
+        notes.push("当前时间没有触发强时间限制，主要按饥饿/无聊、已吃内容和食物本身评分。");
+      }
+
+      return {
+        adjustment,
+        notes,
+        label: formatClock()
+      };
+    }
+
+    function scoreFood(text, options = {}) {
+      const normalized = normalize(text);
+      const metrics = { ...defaultMetrics };
+      const matched = [];
+      const notes = [];
+
+      for (const rule of rules) {
+        const hit = rule.keywords.some(keyword => normalized.includes(normalize(keyword)));
+        if (!hit) continue;
+
+        matched.push(rule.name);
+        for (const [key, value] of Object.entries(rule.effects)) {
+          metrics[key] += value;
+        }
+        notes.push(...rule.notes);
+      }
+
+      const hasBalancedSignals =
+        /米饭|饭|面|nudel|reis|kartoffel|pasta|全麦|vollkorn/.test(normalized) &&
+        /蛋|鸡|鱼|牛|豆腐|酸奶|奶|käse|kaese|quark|skyr|ei|fisch|tofu|hähnchen|haehnchen/.test(normalized) &&
+        /菜|蔬菜|青菜|沙拉|gemuese|gemüse|salat/.test(normalized);
+
+      if (hasBalancedSignals) {
+        metrics.stop += 10;
+        metrics.trigger += 10;
+        metrics.satiety += 14;
+        metrics.nutrition += 12;
+        metrics.after += 12;
+        notes.push("这个名字里同时出现主食、蛋白质和蔬菜信号，是比较稳的组合。");
+      }
+
+      const hasBigPackageSignal = /一大|整盒|整袋|家庭装|大包|大份| XXL|xxl|gross|groß/.test(normalized);
+      if (hasBigPackageSignal) {
+        metrics.stop -= 22;
+        metrics.trigger -= 16;
+        metrics.after -= 12;
+        notes.push("名字里有大份或大包装信号，建议先分装或只买单份。");
+      }
+
+      const isWholeFood = wholeFoodPattern.test(normalized);
+      const isLowNutrition = lowNutritionPattern.test(normalized);
+      const isLowCalWhole = lowCalWholePattern.test(normalized);
+
+      if (options.mood === "hungry") {
+        if (isWholeFood || metrics.satiety >= 66 || metrics.nutrition >= 66) {
+          metrics.satiety += 10;
+          metrics.nutrition += 8;
+          metrics.after += 8;
+          notes.push("你选择的是“饿了”：高饱腹、原型食物会被加权，因为它更像是在照顾身体需要。");
+        }
+        if (isLowNutrition) {
+          metrics.satiety -= 10;
+          metrics.nutrition -= 8;
+          metrics.after -= 8;
+          notes.push("如果是真的饿，低营养密度食物更容易让你吃完还想继续找东西。");
+        }
+      }
+
+      if (options.mood === "bored") {
+        if (isLowCalWhole) {
+          metrics.stop += 10;
+          metrics.trigger += 10;
+          metrics.after += 8;
+          notes.push("你选择的是“无聊/想吃”：低卡原型食物会被加权，因为它更适合做安全缓冲。");
+        } else if (isWholeFood) {
+          metrics.stop += 6;
+          metrics.trigger += 6;
+          notes.push("无聊时选择原型食物，比选择高糖高油零食更不容易滑向失控。");
+        }
+        if (isLowNutrition) {
+          metrics.stop -= 12;
+          metrics.trigger -= 16;
+          metrics.after -= 12;
+          notes.push("无聊时吃高触发食物，通常不是身体需要，更需要小份边界。");
+        }
+      }
+
+      for (const key of Object.keys(metrics)) {
+        metrics[key] = clamp(metrics[key]);
+      }
+
+      const total = clamp(
+        metrics.stop * 0.28 +
+        metrics.trigger * 0.24 +
+        metrics.satiety * 0.20 +
+        metrics.nutrition * 0.14 +
+        metrics.after * 0.10 +
+        metrics.sugar * 0.04
+      );
+
+      const uniqueNotes = [...new Set(notes)];
+      if (matched.length === 0) {
+        uniqueNotes.push("没有命中明确类别，所以这是保守估算。你可以输入更具体一点，比如“米饭鸡蛋青菜”或“大包薯片”。");
+      }
+
+      return {
+        total,
+        metrics,
+        matched,
+        notes: uniqueNotes,
+        traits: {
+          isWholeFood,
+          isLowNutrition,
+          isLowCalWhole,
+          isSnack: snackPattern.test(normalized),
+          isDrink: drinkPattern.test(normalized),
+          hasBalancedSignals,
+          hasBigPackageSignal
+        }
+      };
+    }
+
+    function contextScore(beforeText, foodData, mood) {
+      const normalized = normalize(beforeText);
+      let score = mood === "hungry" ? 66 : 48;
+      const notes = [];
+      const timing = mealTimingScore();
+
+      if (!normalized) {
+        notes.push("没有填写之前吃过什么，所以“该不该吃”按中性估算。");
+      }
+
+      const ateLittle = /没吃|没怎么吃|空腹|只喝|没来得及|nothing|wenig|kaum/.test(normalized);
+      const hadBalanced = /饭|米饭|面|主食|鸡|蛋|鱼|牛|豆腐|酸奶|奶|菜|蔬菜|青菜|沙拉|reis|nudel|kartoffel|ei|fisch|tofu|gemuese|gemüse|salat/.test(normalized);
+      const hadLowNutrition = lowNutritionPattern.test(normalized);
+      const hadProtein = /蛋|鸡|鱼|牛|虾|豆腐|豆浆|酸奶|牛奶|奶酪|ei|fisch|tofu|quark|skyr|joghurt|milch|kaese|käse/.test(normalized);
+      const hadVegOrFruit = /菜|蔬菜|青菜|沙拉|水果|苹果|香蕉|gemuese|gemüse|salat|obst|apfel|banane/.test(normalized);
+      const hadStaple = /饭|米饭|面|面包|燕麦|全麦|土豆|红薯|玉米|reis|nudel|brot|hafer|vollkorn|kartoffel/.test(normalized);
+
+      if (ateLittle) {
+        score += mood === "hungry" ? 18 : 8;
+        notes.push("你之前吃得少，如果现在是真的饿，吃一点稳定食物是合理的。");
+      }
+
+      if (hadProtein && hadVegOrFruit && hadStaple) {
+        score -= mood === "hungry" ? 4 : 16;
+        notes.push("之前已经比较均衡，若只是无聊，继续吃的必要性会降低。");
+      } else if (hadBalanced) {
+        score += mood === "hungry" ? 2 : -8;
+        notes.push("之前有一些正餐信号，下一步更适合小份、低触发选择。");
+      }
+
+      if (hadLowNutrition) {
+        score -= 10;
+        notes.push("之前已有甜食、零食或快餐信号，继续吃高触发食物会降低减脂和稳定进食习惯分。");
+      }
+
+      if (foodData.traits.isWholeFood && (mood === "hungry" || ateLittle)) {
+        score += 12;
+        notes.push("当前食物偏原型/高营养，能帮你把“想吃”接回更稳定的进食习惯。");
+      }
+
+      if (foodData.traits.isLowNutrition) {
+        score -= mood === "bored" ? 20 : 12;
+        notes.push("当前食物营养密度偏低，尤其无聊时不太建议把它作为主要选择。");
+      }
+
+      if (foodData.traits.isLowCalWhole && mood === "bored") {
+        score += 18;
+        notes.push("无聊时如果仍想吃，低卡原型食物是更温和的选择。");
+      }
+
+      score += timing.adjustment;
+      notes.push(...timing.notes);
+
+      return {
+        total: clamp(score),
+        notes: [...new Set(notes)],
+        timing
+      };
+    }
+
+    function finalScore(foodData, readiness) {
+      const readinessPenalty = readiness.total < 50 ? (50 - readiness.total) * 0.55 : 0;
+      const readinessBoost = readiness.total >= 70 ? (readiness.total - 70) * 0.18 : 0;
+      return clamp(foodData.total * 0.72 + readiness.total * 0.28 - readinessPenalty + readinessBoost);
+    }
+
+    function portionAdvice(food, foodData, readiness, mood) {
+      const normalized = normalize(food);
+      if (readiness.timing.adjustment < -10 && readiness.total >= 40 && readiness.total < 58) {
+        if (foodData.traits.isSnack) {
+          return "因为现在靠近正餐，建议最多 2-3 口或 2-3 片，保留胃口给正餐。";
+        }
+        return "因为现在靠近正餐，建议只吃少量垫一下，比如半份、几口或一小杯。";
+      }
+      if (readiness.total < 40) {
+        if (foodData.traits.isSnack) {
+          return "建议先不直接开吃。先喝水、离开食物 10 分钟；如果仍然决定吃，最多 3-4 片或 3-4 口，吃完立刻停。";
+        }
+        if (foodData.traits.isDrink) {
+          return "建议先不直接喝。先离开 10 分钟；如果仍然决定喝，最多 3-4 口，尽量不要选大杯。";
+        }
+        return "建议先不直接开吃。先喝水、离开食物 10 分钟；如果仍然饿，换成一小份高蛋白/水果/蔬菜。";
+      }
+      if (foodData.traits.isSnack) {
+        if (/薯片|chips|锅巴|爆米花|popcorn/.test(normalized)) return "零食边界：先倒出 3-4 片或 3-4 口，包装收走，吃完停 10 分钟再判断。";
+        if (/巧克力|schokolade|糖果|bonbon/.test(normalized)) return "甜食边界：先吃 1-2 小块，最多 3-4 口，剩下的离开视线。";
+        return "零食边界：最多 3-4 口，先装进小碗，不拿着整包吃。";
+      }
+      if (foodData.traits.isDrink) {
+        return "饮料边界：选小杯或半杯，先喝 3-4 口停一下；如果是饿，最好加一个有蛋白质的小食物。";
+      }
+      if (foodData.traits.hasBalancedSignals) {
+        return "正餐份量：可以吃一份，先吃到 7 分饱；如果想继续，等 10 分钟再决定。";
+      }
+      if (foodData.traits.isLowCalWhole && mood === "bored") {
+        return "无聊想吃：可以选一小碗或一个拳头大小，慢慢吃，不需要追求吃完一大份。";
+      }
+      if (foodData.traits.isWholeFood) {
+        return "原型食物：可以吃小份到半份；优先搭配蛋白质或蔬菜，让它更稳。";
+      }
+      return "默认边界：先取半份或 3-4 口，吃完停 10 分钟，确认是真的饿再继续。";
+    }
+
+    function verdict(score) {
+      if (score >= 76) {
+        return {
+          title: "比较稳，可以选",
+          text: "这个选择大概率有边界感，吃完比较容易停住。",
+          color: "var(--good)"
+        };
+      }
+      if (score >= 58) {
+        return {
+          title: "可以，但加一个边界",
+          text: "它不算危险，但最好提前决定份量，吃完就结束。",
+          color: "var(--accent-2)"
+        };
+      }
+      if (score >= 40) {
+        return {
+          title: "谨慎选，先改成单份",
+          text: "它可能会把你带向继续吃。不是禁止，而是需要更清楚的边界。",
+          color: "var(--warn)"
+        };
+      }
+      return {
+        title: "今天不太适合直接选",
+        text: "如果你已经很想失控，建议换成更有固定份量、更顶饱的版本。",
+        color: "var(--bad)"
+      };
+    }
+
+    function render(food) {
+      const cleanFood = food.trim();
+      if (!cleanFood) {
+        result.innerHTML = '<p class="empty">先输入一个食物名，我会给你一个 0-100 分和具体理由。</p>';
+        return;
+      }
+
+      const mood = document.querySelector('input[name="mood"]:checked').value;
+      const data = scoreFood(cleanFood, { mood });
+      const readiness = contextScore(beforeFoodInput.value, data, mood);
+      const combined = finalScore(data, readiness);
+      const v = verdict(combined);
+      const noteClass = combined < 40 ? "bad" : combined < 58 ? "warn" : "";
+      const portion = portionAdvice(cleanFood, data, readiness, mood);
+
+      result.innerHTML = `
+        <div class="score-line" style="--score: ${combined}; --score-color: ${v.color}">
+          <div class="score-ring" aria-label="评分 ${combined} 分">
+            <div class="score-value">${combined}<small>分 / 100</small></div>
+          </div>
+          <div>
+            <div class="verdict">${v.title}</div>
+            <p class="subtext">${v.text}</p>
+            <p class="subtext" style="margin-top: 8px;">识别类别：${data.matched.length ? data.matched.join("、") : "未明确识别"}</p>
+            <div class="mini-score">
+              <span class="pill">食物稳定分 ${data.total}</span>
+              <span class="pill">现在该吃分 ${readiness.total}</span>
+              <span class="pill">${mood === "hungry" ? "饿了权重" : "无聊权重"}</span>
+              <span class="pill">当前 ${readiness.timing.label}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          ${Object.entries(data.metrics).map(([key, value]) => `
+            <div class="metric" style="--value: ${value}; --score-color: ${v.color}">
+              <div class="metric-name"><span>${labels[key]}</span><span>${value}</span></div>
+              <div class="bar"><span></span></div>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="notes">
+          ${data.notes.map(note => `<div class="note ${noteClass}">${note}</div>`).join("")}
+          ${readiness.notes.map(note => `<div class="note ${noteClass}">${note}</div>`).join("")}
+          <div class="note ${noteClass}"><strong>建议份量：</strong>${portion}</div>
+          <div class="note">快速选择句：先看现在是饿还是无聊；饿了选高饱腹原型食物，无聊选低卡原型食物，并且只取小份。</div>
+        </div>
+      `;
+    }
+
+    scoreButton.addEventListener("click", () => render(foodInput.value));
+    [breakfastTimeInput, lunchTimeInput, dinnerTimeInput].forEach(control => {
+      control.addEventListener("change", () => {
+        updateCurrentTimeLabel();
+        if (foodInput.value.trim()) render(foodInput.value);
+      });
+    });
+    foodInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") render(foodInput.value);
+    });
+    document.querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        foodInput.value = chip.textContent;
+        render(foodInput.value);
+      });
+    });
+
+    function loadWishes() {
+      try {
+        return JSON.parse(localStorage.getItem("foodScoreWishes") || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function saveWishes(wishes) {
+      localStorage.setItem("foodScoreWishes", JSON.stringify(wishes));
+    }
+
+    function renderWishes() {
+      const wishes = loadWishes();
+      if (!wishes.length) {
+        wishList.innerHTML = '<p class="subtext">还没有记录。可以把想吃的东西先放这里。</p>';
+        return;
+      }
+
+      wishList.innerHTML = wishes.map((wish, index) => `
+        <div class="wish-item">
+          <div>
+            <div class="wish-name">${escapeHtml(wish.name)}</div>
+            <div class="wish-time">${escapeHtml(wish.time)}</div>
+          </div>
+          <button class="ghost-button" type="button" data-remove-wish="${index}">删除</button>
+        </div>
+      `).join("");
+    }
+
+    function addWish(name) {
+      const cleanName = name.trim();
+      if (!cleanName) return;
+      const wishes = loadWishes();
+      wishes.unshift({
+        name: cleanName,
+        time: `记录于 ${formatClock()}`
+      });
+      saveWishes(wishes.slice(0, 20));
+      wishInput.value = "";
+      renderWishes();
+    }
+
+    addWishButton.addEventListener("click", () => addWish(wishInput.value || foodInput.value));
+    wishInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") addWish(wishInput.value || foodInput.value);
+    });
+    wishList.addEventListener("click", event => {
+      const button = event.target.closest("[data-remove-wish]");
+      if (!button) return;
+      const index = Number(button.dataset.removeWish);
+      const wishes = loadWishes();
+      wishes.splice(index, 1);
+      saveWishes(wishes);
+      renderWishes();
+    });
+
+    updateCurrentTimeLabel();
+    setInterval(updateCurrentTimeLabel, 30000);
+    renderWishes();
+  </script>
+</body>
+</html>
